@@ -1,7 +1,7 @@
 use actix::prelude::*;
 use diesel::prelude::*;
 
-use super::DbExecutor;
+use super::RealDbExecutor;
 use crate::app::profiles::{
     FollowProfile, GetProfile, ProfileResponse, ProfileResponseInner, UnfollowProfile,
 };
@@ -14,7 +14,7 @@ impl Message for GetProfile {
     type Result = Result<ProfileResponse>;
 }
 
-impl Handler<GetProfile> for DbExecutor {
+impl Handler<GetProfile> for RealDbExecutor {
     type Result = Result<ProfileResponse>;
 
     fn handle(&mut self, msg: GetProfile, _: &mut Self::Context) -> Self::Result {
@@ -52,7 +52,7 @@ impl Message for FollowProfile {
     type Result = Result<ProfileResponse>;
 }
 
-impl Handler<FollowProfile> for DbExecutor {
+impl Handler<FollowProfile> for RealDbExecutor {
     type Result = Result<ProfileResponse>;
 
     fn handle(&mut self, msg: FollowProfile, _: &mut Self::Context) -> Self::Result {
@@ -94,7 +94,7 @@ impl Message for UnfollowProfile {
     type Result = Result<ProfileResponse>;
 }
 
-impl Handler<UnfollowProfile> for DbExecutor {
+impl Handler<UnfollowProfile> for RealDbExecutor {
     type Result = Result<ProfileResponse>;
 
     fn handle(&mut self, msg: UnfollowProfile, _: &mut Self::Context) -> Self::Result {

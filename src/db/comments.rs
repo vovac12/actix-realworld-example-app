@@ -2,7 +2,7 @@ use actix::prelude::*;
 use diesel::prelude::*;
 use uuid::Uuid;
 
-use super::{DbExecutor, PooledConn};
+use super::{PooledConn, RealDbExecutor};
 use crate::app::articles::comments::{
     AddCommentOuter, CommentListResponse, CommentResponse, CommentResponseInner, DeleteComment,
     GetComments,
@@ -18,7 +18,7 @@ impl Message for AddCommentOuter {
     type Result = Result<CommentResponse>;
 }
 
-impl Handler<AddCommentOuter> for DbExecutor {
+impl Handler<AddCommentOuter> for RealDbExecutor {
     type Result = Result<CommentResponse>;
 
     fn handle(&mut self, msg: AddCommentOuter, _: &mut Self::Context) -> Self::Result {
@@ -51,7 +51,7 @@ impl Message for GetComments {
     type Result = Result<CommentListResponse>;
 }
 
-impl Handler<GetComments> for DbExecutor {
+impl Handler<GetComments> for RealDbExecutor {
     type Result = Result<CommentListResponse>;
 
     fn handle(&mut self, msg: GetComments, _: &mut Self::Context) -> Self::Result {
@@ -79,7 +79,7 @@ impl Message for DeleteComment {
     type Result = Result<()>;
 }
 
-impl Handler<DeleteComment> for DbExecutor {
+impl Handler<DeleteComment> for RealDbExecutor {
     type Result = Result<()>;
 
     fn handle(&mut self, msg: DeleteComment, _: &mut Self::Context) -> Self::Result {

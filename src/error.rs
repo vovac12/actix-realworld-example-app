@@ -1,5 +1,5 @@
-use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
 use actix::MailboxError;
+use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
 use diesel::{
     r2d2::PoolError,
     result::{DatabaseErrorKind, Error as DieselError},

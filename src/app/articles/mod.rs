@@ -1,7 +1,7 @@
 pub mod comments;
 
-use actix_web::{HttpRequest, HttpResponse, web::Json, web::Path, web::Query, web::Data};
 use actix_http::error::ResponseError;
+use actix_web::{web::Data, web::Json, web::Path, web::Query, HttpRequest, HttpResponse};
 use futures::{future::result, Future};
 use validator::Validate;
 
@@ -187,11 +187,7 @@ pub fn get(
 
 pub fn update(
     state: Data<AppState>,
-    (path, form, req): (
-        Path<ArticlePath>,
-        Json<In<UpdateArticle>>,
-        HttpRequest,
-    ),
+    (path, form, req): (Path<ArticlePath>, Json<In<UpdateArticle>>, HttpRequest),
 ) -> impl Future<Item = HttpResponse, Error = Error> {
     let article = form.into_inner().article;
 

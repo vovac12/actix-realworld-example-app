@@ -1,4 +1,4 @@
-use actix_web::{HttpRequest, HttpResponse, web::Json, ResponseError, web::Data};
+use actix_web::{web::Data, web::Json, HttpRequest, HttpResponse, ResponseError};
 use futures::{future::result, Future};
 use regex::Regex;
 use std::convert::From;
@@ -167,7 +167,10 @@ pub fn login(
         })
 }
 
-pub fn get_current(state: Data<AppState>, req: HttpRequest) -> impl Future<Item = HttpResponse, Error = Error> {
+pub fn get_current(
+    state: Data<AppState>,
+    req: HttpRequest,
+) -> impl Future<Item = HttpResponse, Error = Error> {
     authenticate(&state, &req)
         .and_then(|auth| Ok(HttpResponse::Ok().json(UserResponse::create_with_auth(auth))))
 }

@@ -1,7 +1,7 @@
 use actix::prelude::*;
 use diesel::prelude::*;
 
-use crate::db::DbExecutor;
+use crate::db::RealDbExecutor;
 use crate::prelude::*;
 use crate::utils::{
     auth::{Auth, GenerateAuth},
@@ -14,7 +14,7 @@ impl Message for GenerateAuth {
     type Result = Result<Auth>;
 }
 
-impl Handler<GenerateAuth> for DbExecutor {
+impl Handler<GenerateAuth> for RealDbExecutor {
     type Result = Result<Auth>;
 
     fn handle(&mut self, msg: GenerateAuth, _: &mut Self::Context) -> Self::Result {

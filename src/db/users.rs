@@ -2,7 +2,7 @@ use actix::prelude::*;
 use diesel::prelude::*;
 use libreauth::pass::HashBuilder;
 
-use super::DbExecutor;
+use super::RealDbExecutor;
 use crate::app::users::{LoginUser, RegisterUser, UpdateUserOuter, UserResponse};
 use crate::models::{NewUser, User, UserChange};
 use crate::prelude::*;
@@ -14,7 +14,7 @@ impl Message for RegisterUser {
     type Result = Result<UserResponse>;
 }
 
-impl Handler<RegisterUser> for DbExecutor {
+impl Handler<RegisterUser> for RealDbExecutor {
     type Result = Result<UserResponse>;
 
     fn handle(&mut self, msg: RegisterUser, _: &mut Self::Context) -> Self::Result {
@@ -44,7 +44,7 @@ impl Message for LoginUser {
     type Result = Result<UserResponse>;
 }
 
-impl Handler<LoginUser> for DbExecutor {
+impl Handler<LoginUser> for RealDbExecutor {
     type Result = Result<UserResponse>;
 
     fn handle(&mut self, msg: LoginUser, _: &mut Self::Context) -> Self::Result {
@@ -81,7 +81,7 @@ impl Message for UpdateUserOuter {
     type Result = Result<UserResponse>;
 }
 
-impl Handler<UpdateUserOuter> for DbExecutor {
+impl Handler<UpdateUserOuter> for RealDbExecutor {
     type Result = Result<UserResponse>;
 
     fn handle(&mut self, msg: UpdateUserOuter, _: &mut Self::Context) -> Self::Result {

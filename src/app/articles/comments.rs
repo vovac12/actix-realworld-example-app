@@ -1,5 +1,5 @@
-use actix_web::{HttpRequest, HttpResponse, web::Json, web::Path, web::Data};
 use actix_http::error::ResponseError;
+use actix_web::{web::Data, web::Json, web::Path, HttpRequest, HttpResponse};
 use futures::{future::result, Future};
 use validator::Validate;
 
@@ -80,11 +80,7 @@ pub struct CommentListResponse {
 
 pub fn add(
     state: Data<AppState>,
-    (path, form, req): (
-        Path<ArticlePath>,
-        Json<In<AddComment>>,
-        HttpRequest,
-    ),
+    (path, form, req): (Path<ArticlePath>, Json<In<AddComment>>, HttpRequest),
 ) -> impl Future<Item = HttpResponse, Error = Error> {
     let comment = form.into_inner().comment;
 
@@ -146,4 +142,286 @@ pub fn delete(
             Ok(_) => Ok(HttpResponse::Ok().finish()),
             Err(e) => Ok(e.error_response()),
         })
+}
+
+#[cfg(test)]
+mod tests {
+    use chrono::NaiveDateTime;
+    use http::header::AUTHORIZATION;
+
+    use super::*;
+    use crate::{app::{tests::{
+        authorized_mocker, get_body, new_handler, new_state_value, state_from_factory,
+        unauthorized_mocker, unauthorized_state,
+    }}};
+    
+    impl Default for AddComment {
+        fn default() -> Self {
+            AddComment {
+                body: "Body".to_string()
+            }
+        }
+    }
+    
+    impl Default for AddCommentOuter {
+        fn default() -> Self {
+            AddCommentOuter {
+                comment: AddComment::default(),
+                auth: Auth::default(),
+                slug: "slug".to_string()
+            }
+        }
+    }
+    
+    impl Default for CommentResponseInner {
+        fn default() -> Self {
+            CommentResponseInner {
+                        id: 12,
+                        created_at: CustomDateTime(NaiveDateTime::from_timestamp(12, 12)),
+                        updated_at: CustomDateTime(NaiveDateTime::from_timestamp(12, 2)),
+                        body: "Body".to_string(),
+                        author: ProfileResponseInner {
+                            username: "User".to_string(),
+                            bio: None,
+                            image: None,
+                            following: true,
+                        },
+                    }
+            
+        }
+    }
+    
+    impl Default for CommentResponse {
+        fn default() -> Self {
+            CommentResponse {
+                comment: CommentResponseInner::default()
+            }
+        }
+    }
+    
+    impl Default for CommentListResponse {
+        fn default() -> Self {
+            CommentListResponse{
+                comments: vec![CommentResponseInner::default()]
+            }
+        }
+    }
+
+    #[test]
+    fn test_delete_some() {
+        let mut sys = actix::System::new("conduit");
+        let state = new_state_value(|| Ok(()));
+        let req =
+            actix_web::test::TestRequest::with_header(AUTHORIZATION, "Token sj").to_http_request();
+        let resp = sys
+            .block_on(delete(
+                Data::new(state),
+                (
+                    Path::from(ArticleCommentPath {
+                        slug: "a".to_string(),
+                        comment_id: 3,
+                    }),
+                    HttpRequest::from(req),
+                ),
+            ))
+            .unwrap();
+        let body = get_body(&resp);
+        assert_eq!(body, r#""#);
+    }
+
+    #[test]
+    fn test_delete_unauthorized() {
+        let mut sys = actix::System::new("conduit");
+        let state = unauthorized_state();
+        let req = actix_web::test::TestRequest::default().to_http_request();
+        let resp = sys
+            .block_on(delete(
+                Data::new(state),
+                (
+                    Path::from(ArticleCommentPath {
+                        slug: "a".to_string(),
+                        comment_id: 3,
+                    }),
+                    HttpRequest::from(req),
+                ),
+            ))
+            .unwrap_err()
+            .error_response();
+        let body = get_body(&resp);
+        assert_eq!(body, r#"{"error":"No authorization was provided"}"#);
+    }
+
+    #[test]
+    fn test_delete_not_exists() {
+        let mut sys = actix::System::new("conduit");
+        let state = state_from_factory(|| {
+            authorized_mocker().with_handler::<DeleteComment>(new_handler(|_, _| {
+                Box::new(Some(Err(Error::NotFound(json!(""))) as Result<()>))
+            }))
+        });
+        let req = actix_web::test::TestRequest::default()
+            .header(AUTHORIZATION, "Token d")
+            .to_http_request();
+        let resp = sys
+            .block_on(delete(
+                Data::new(state),
+                (
+                    Path::from(ArticleCommentPath {
+                        slug: "a".to_string(),
+                        comment_id: 3,
+                    }),
+                    HttpRequest::from(req),
+                ),
+            ))
+            .unwrap();
+        let body = get_body(&resp);
+        assert_eq!(body, r#""""#);
+        assert_eq!(resp.status(), 404);
+    }
+
+    #[test]
+    fn test_list_not_found() {
+        let mut sys = actix::System::new("conduit");
+        let state = state_from_factory(|| {
+            unauthorized_mocker().with_handler::<GetComments>(new_handler(|_, _| {
+                Box::new(Some(
+                    Err(Error::NotFound(json!(""))) as Result<CommentListResponse>
+                ))
+            }))
+        });
+        let req =
+            actix_web::test::TestRequest::with_header(AUTHORIZATION, "Token sj").to_http_request();
+        let resp = sys
+            .block_on(list(
+                Data::new(state),
+                (
+                    Path::from(ArticlePath {
+                        slug: "a".to_string(),
+                    }),
+                    HttpRequest::from(req),
+                ),
+            ))
+            .unwrap();
+        let body = get_body(&resp);
+        assert_eq!(resp.status(), 404);
+        assert_eq!(body, r#""""#);
+    }
+
+    #[test]
+    fn test_list_some() {
+        let mut sys = actix::System::new("conduit");
+        let state = state_from_factory(|| {
+            unauthorized_mocker().with_handler::<GetComments>(new_handler(|_, _| {
+                Box::new(Some(Ok(CommentListResponse::default()) as Result<CommentListResponse>))
+            }))
+        });
+        let req =
+            actix_web::test::TestRequest::with_header(AUTHORIZATION, "Token sj").to_http_request();
+        let resp = sys
+            .block_on(list(
+                Data::new(state),
+                (
+                    Path::from(ArticlePath {
+                        slug: "a".to_string(),
+                    }),
+                    HttpRequest::from(req),
+                ),
+            ))
+            .unwrap();
+        let body = get_body(&resp);
+        assert_eq!(resp.status(), 200);
+        assert_eq!(
+            body,
+            r#"{"comments":[{"id":12,"createdAt":"1970-01-01T00:00:12.000Z","updatedAt":"1970-01-01T00:00:12.000Z","body":"Body","author":{"username":"User","bio":null,"image":null,"following":true}}]}"#
+        );
+    }
+
+    #[test]
+    fn test_list_authorized() {
+        let mut sys = actix::System::new("conduit");
+        let state = state_from_factory(|| {
+            authorized_mocker().with_handler::<GetComments>(new_handler(|_, _| {
+                Box::new(Some(Ok(CommentListResponse::default()) as Result<CommentListResponse>))
+            }))
+        });
+        let req =
+            actix_web::test::TestRequest::with_header(AUTHORIZATION, "Token sj").to_http_request();
+        let resp = sys
+            .block_on(list(
+                Data::new(state),
+                (
+                    Path::from(ArticlePath {
+                        slug: "a".to_string(),
+                    }),
+                    HttpRequest::from(req),
+                ),
+            ))
+            .unwrap();
+        let body = get_body(&resp);
+        assert_eq!(resp.status(), 200);
+        assert_eq!(
+            body,
+            r#"{"comments":[{"id":12,"createdAt":"1970-01-01T00:00:12.000Z","updatedAt":"1970-01-01T00:00:12.000Z","body":"Body","author":{"username":"User","bio":null,"image":null,"following":true}}]}"#
+        );
+    }
+
+    #[test]
+    fn test_add_unauthorized() {
+        let mut sys = actix::System::new("conduit");
+        let state = state_from_factory(|| {
+            unauthorized_mocker().with_handler::<AddCommentOuter>(new_handler(|_, _| {
+                Box::new(Some(Ok(CommentResponse::default()) as Result<CommentResponse>))
+            }))
+        });
+        let req =
+            actix_web::test::TestRequest::with_header(AUTHORIZATION, "Token sj").to_http_request();
+        let resp = sys
+            .block_on(add(
+                Data::new(state),
+                (
+                    Path::from(ArticlePath {
+                        slug: "a".to_string(),
+                    }),
+                    Json(In{comment: AddComment::default()}),
+                    HttpRequest::from(req),
+                ),
+            ))
+            .unwrap_err().error_response();
+        let body = get_body(&resp);
+        assert_eq!(resp.status(), 401);
+        assert_eq!(
+            body,
+            r#""Not found""#
+        );
+    }
+
+    #[test]
+    fn test_add_authorized() {
+        let mut sys = actix::System::new("conduit");
+        let state = state_from_factory(|| {
+            authorized_mocker().with_handler::<AddCommentOuter>(new_handler(|_, _| {
+                Box::new(Some(Ok(CommentResponse::default()) as Result<CommentResponse>))
+            }))
+        });
+        let req =
+            actix_web::test::TestRequest::with_header(AUTHORIZATION, "Token sj").to_http_request();
+        let resp = sys
+            .block_on(add(
+                Data::new(state),
+                (
+                    Path::from(ArticlePath {
+                        slug: "a".to_string(),
+                    }),
+                    Json(In{comment: AddComment::default()}),
+                    HttpRequest::from(req),
+                ),
+            ))
+            .unwrap();
+        let body = get_body(&resp);
+        assert_eq!(resp.status(), 200);
+        assert_eq!(
+            body,
+            r#"{"comment":{"id":12,"createdAt":"1970-01-01T00:00:12.000Z","updatedAt":"1970-01-01T00:00:12.000Z","body":"Body","author":{"username":"User","bio":null,"image":null,"following":true}}}"#
+        );
+    }
 }

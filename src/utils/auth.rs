@@ -1,4 +1,4 @@
-use actix_web::{http::header::AUTHORIZATION, HttpRequest, web::Data};
+use actix_web::{http::header::AUTHORIZATION, web::Data, HttpRequest};
 use futures::{future::result, Future};
 use http::header::HeaderValue;
 
@@ -21,7 +21,10 @@ pub struct GenerateAuth {
     pub token: String,
 }
 
-pub fn authenticate(state: &Data<AppState>, req: &HttpRequest) -> impl Future<Item = Auth, Error = Error> {
+pub fn authenticate(
+    state: &Data<AppState>,
+    req: &HttpRequest,
+) -> impl Future<Item = Auth, Error = Error> {
     let db = state.db.clone();
 
     result(preprocess_authz_token(req.headers().get(AUTHORIZATION)))
@@ -48,4 +51,20 @@ fn preprocess_authz_token(token: Option<&HeaderValue>) -> Result<String> {
     let token = token.replacen(TOKEN_PREFIX, "", 1);
 
     Ok(token)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::models::User;
+
+    use super::Auth;
+
+    impl Default for Auth {
+        fn default() -> Self {
+            Auth {
+                user: User::default(),
+                token: "token".to_string()
+            }
+        }
+    }
 }

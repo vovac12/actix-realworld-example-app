@@ -1,5 +1,5 @@
-use actix_web::{HttpRequest, HttpResponse, web::Path, web::Data};
 use actix_http::error::ResponseError;
+use actix_web::{web::Data, web::Path, HttpRequest, HttpResponse};
 use futures::Future;
 
 use super::AppState;

@@ -10,6 +10,7 @@ actix-web = "1.0.7"
 actix-cors = "0.1.0"
 actix-service = "0.4.2"
 actix-http = "0.2.10"
+actix-rt = "1"
 blob-uuid = "0.3.0"
 chrono = "0.4.6"
 diesel = { version = "1.4.2", features = ["chrono", "postgres", "r2d2", "uuidv07", "serde_json"] }

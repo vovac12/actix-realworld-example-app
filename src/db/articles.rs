@@ -4,7 +4,7 @@ use diesel::prelude::*;
 use slug::slugify;
 use uuid::Uuid;
 
-use super::{DbExecutor, PooledConn};
+use super::{PooledConn, RealDbExecutor};
 use crate::app::articles::{
     ArticleListResponse, ArticleResponse, ArticleResponseInner, CreateArticleOuter, DeleteArticle,
     FavoriteArticle, GetArticle, GetArticles, GetFeed, UnfavoriteArticle, UpdateArticleOuter,
@@ -22,7 +22,7 @@ impl Message for CreateArticleOuter {
     type Result = Result<ArticleResponse>;
 }
 
-impl Handler<CreateArticleOuter> for DbExecutor {
+impl Handler<CreateArticleOuter> for RealDbExecutor {
     type Result = Result<ArticleResponse>;
 
     fn handle(&mut self, msg: CreateArticleOuter, _: &mut Self::Context) -> Self::Result {
@@ -59,7 +59,7 @@ impl Message for GetArticle {
     type Result = Result<ArticleResponse>;
 }
 
-impl Handler<GetArticle> for DbExecutor {
+impl Handler<GetArticle> for RealDbExecutor {
     type Result = Result<ArticleResponse>;
 
     fn handle(&mut self, msg: GetArticle, _: &mut Self::Context) -> Self::Result {
@@ -76,7 +76,7 @@ impl Message for UpdateArticleOuter {
     type Result = Result<ArticleResponse>;
 }
 
-impl Handler<UpdateArticleOuter> for DbExecutor {
+impl Handler<UpdateArticleOuter> for RealDbExecutor {
     type Result = Result<ArticleResponse>;
 
     fn handle(&mut self, msg: UpdateArticleOuter, _: &mut Self::Context) -> Self::Result {
@@ -129,7 +129,7 @@ impl Message for DeleteArticle {
     type Result = Result<()>;
 }
 
-impl Handler<DeleteArticle> for DbExecutor {
+impl Handler<DeleteArticle> for RealDbExecutor {
     type Result = Result<()>;
 
     fn handle(&mut self, msg: DeleteArticle, _: &mut Self::Context) -> Self::Result {
@@ -162,7 +162,7 @@ impl Message for FavoriteArticle {
     type Result = Result<ArticleResponse>;
 }
 
-impl Handler<FavoriteArticle> for DbExecutor {
+impl Handler<FavoriteArticle> for RealDbExecutor {
     type Result = Result<ArticleResponse>;
 
     fn handle(&mut self, msg: FavoriteArticle, _: &mut Self::Context) -> Self::Result {
@@ -189,7 +189,7 @@ impl Message for UnfavoriteArticle {
     type Result = Result<ArticleResponse>;
 }
 
-impl Handler<UnfavoriteArticle> for DbExecutor {
+impl Handler<UnfavoriteArticle> for RealDbExecutor {
     type Result = Result<ArticleResponse>;
 
     fn handle(&mut self, msg: UnfavoriteArticle, _: &mut Self::Context) -> Self::Result {
@@ -214,7 +214,7 @@ impl Message for GetArticles {
     type Result = Result<ArticleListResponse>;
 }
 
-impl Handler<GetArticles> for DbExecutor {
+impl Handler<GetArticles> for RealDbExecutor {
     type Result = Result<ArticleListResponse>;
 
     fn handle(&mut self, msg: GetArticles, _: &mut Self::Context) -> Self::Result {
@@ -277,7 +277,7 @@ impl Message for GetFeed {
     type Result = Result<ArticleListResponse>;
 }
 
-impl Handler<GetFeed> for DbExecutor {
+impl Handler<GetFeed> for RealDbExecutor {
     type Result = Result<ArticleListResponse>;
 
     fn handle(&mut self, msg: GetFeed, _: &mut Self::Context) -> Self::Result {
