@@ -1,5 +1,7 @@
 # ![RealWorld Example App](logo.png)
 
+[![Build Status](https://travis-ci.com/vovac12/actix-realworld-example-app.svg?branch=tests)](https://travis-ci.com/vovac12/actix-realworld-example-app)
+
 > ### [Actix](https://actix.rs/) codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://github.com/gothinkster/realworld) spec and API.
 
 This codebase was created to demonstrate a fully fledged fullstack application built with [Actix](https://actix.rs/) including CRUD operations, authentication, routing, pagination, and more.
