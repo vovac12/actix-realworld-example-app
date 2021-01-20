@@ -33,3 +33,6 @@ impl Handler<GenerateAuth> for RealDbExecutor {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {}

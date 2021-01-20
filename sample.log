@@ -1,0 +1,38 @@
+actix-realworld-example-app on  tests [?] is 📦 v0.1.0 via 🦀 v1.51.0-nightly took 4s 
+❯ cargo run --release
+    Finished release [optimized] target(s) in 0.09s
+     Running `target/release/conduit`
+You can access the server at 127.0.0.1:8888
+[2021-01-19T12:48:00Z INFO  actix_web::middleware::logger] 127.0.0.1:52088 "POST /api/users HTTP/1.1" 422 175 "-" "PostmanRuntime/7.26.5" 0.000157
+[2021-01-19T12:50:05Z INFO  actix_web::middleware::logger] 127.0.0.1:52122 "POST /api/users HTTP/1.1" 200 251 "-" "PostmanRuntime/7.26.5" 0.040886
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "POST /api/users HTTP/1.1" 422 71 "-" "PostmanRuntime/7.26.5" 0.021784
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "POST /api/users/login HTTP/1.1" 200 251 "-" "PostmanRuntime/7.26.5" 0.014842
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "POST /api/users/login HTTP/1.1" 200 251 "-" "PostmanRuntime/7.26.5" 0.021582
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "GET /api/user HTTP/1.1" 200 251 "-" "PostmanRuntime/7.26.5" 0.000804
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "PUT /api/user HTTP/1.1" 200 251 "-" "PostmanRuntime/7.26.5" 0.007232
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "GET /api/articles HTTP/1.1" 200 33 "-" "PostmanRuntime/7.26.5" 0.000919
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "GET /api/articles?author=johnjacob HTTP/1.1" 200 33 "-" "PostmanRuntime/7.26.5" 0.001741
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "GET /api/articles?favorited=jane HTTP/1.1" 200 33 "-" "PostmanRuntime/7.26.5" 0.001228
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "GET /api/articles?tag=dragons HTTP/1.1" 200 33 "-" "PostmanRuntime/7.26.5" 0.001527
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "POST /api/articles HTTP/1.1" 200 382 "-" "PostmanRuntime/7.26.5" 0.021624
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "GET /api/articles/feed HTTP/1.1" 200 33 "-" "PostmanRuntime/7.26.5" 0.001227
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "GET /api/articles HTTP/1.1" 200 403 "-" "PostmanRuntime/7.26.5" 0.001537
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "GET /api/articles HTTP/1.1" 200 403 "-" "PostmanRuntime/7.26.5" 0.002273
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "GET /api/articles?author=user HTTP/1.1" 200 403 "-" "PostmanRuntime/7.26.5" 0.002474
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "GET /api/articles?author=user HTTP/1.1" 200 403 "-" "PostmanRuntime/7.26.5" 0.004109
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "GET /api/articles?favorited=jane HTTP/1.1" 200 33 "-" "PostmanRuntime/7.26.5" 0.001241
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "GET /api/articles?favorited=jane HTTP/1.1" 200 33 "-" "PostmanRuntime/7.26.5" 0.000844
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "GET /api/articles/yhNU33xvRLGG8bvx9GZJ0A-how-to-train-your-dragon HTTP/1.1" 200 382 "-" "PostmanRuntime/7.26.5" 0.001285
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "GET /api/articles?tag=dragons HTTP/1.1" 200 403 "-" "PostmanRuntime/7.26.5" 0.002048
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "PUT /api/articles/yhNU33xvRLGG8bvx9GZJ0A-how-to-train-your-dragon HTTP/1.1" 200 381 "-" "PostmanRuntime/7.26.5" 0.007826
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "POST /api/articles/yhNU33xvRLGG8bvx9GZJ0A-how-to-train-your-dragon/favorite HTTP/1.1" 200 380 "-" "PostmanRuntime/7.26.5" 0.011684
+[2021-01-19T12:50:46Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "DELETE /api/articles/yhNU33xvRLGG8bvx9GZJ0A-how-to-train-your-dragon/favorite HTTP/1.1" 200 381 "-" "PostmanRuntime/7.26.5" 0.008270
+[2021-01-19T12:50:47Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "POST /api/articles/yhNU33xvRLGG8bvx9GZJ0A-how-to-train-your-dragon/comments HTTP/1.1" 200 197 "-" "PostmanRuntime/7.26.5" 0.010796
+[2021-01-19T12:50:47Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "GET /api/articles/yhNU33xvRLGG8bvx9GZJ0A-how-to-train-your-dragon/comments HTTP/1.1" 200 200 "-" "PostmanRuntime/7.26.5" 0.001670
+[2021-01-19T12:50:47Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "DELETE /api/articles/yhNU33xvRLGG8bvx9GZJ0A-how-to-train-your-dragon/comments/1 HTTP/1.1" 200 0 "-" "PostmanRuntime/7.26.5" 0.006517
+[2021-01-19T12:50:47Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "DELETE /api/articles/yhNU33xvRLGG8bvx9GZJ0A-how-to-train-your-dragon HTTP/1.1" 200 0 "-" "PostmanRuntime/7.26.5" 0.015867
+[2021-01-19T12:50:47Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "POST /api/users HTTP/1.1" 200 263 "-" "PostmanRuntime/7.26.5" 0.023089
+[2021-01-19T12:50:47Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "GET /api/profiles/celeb_user HTTP/1.1" 200 79 "-" "PostmanRuntime/7.26.5" 0.000954
+[2021-01-19T12:50:47Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "POST /api/profiles/celeb_user/follow HTTP/1.1" 200 78 "-" "PostmanRuntime/7.26.5" 0.005715
+[2021-01-19T12:50:47Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "DELETE /api/profiles/celeb_user/follow HTTP/1.1" 200 79 "-" "PostmanRuntime/7.26.5" 0.005451
+[2021-01-19T12:50:47Z INFO  actix_web::middleware::logger] 127.0.0.1:52170 "GET /api/tags HTTP/1.1" 200 11 "-" "PostmanRuntime/7.26.5" 0.000629

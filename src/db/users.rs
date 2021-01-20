@@ -114,3 +114,6 @@ impl Handler<UpdateUserOuter> for RealDbExecutor {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {}

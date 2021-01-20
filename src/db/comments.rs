@@ -160,3 +160,6 @@ fn get_comment_list_response(
         comments: comment_list,
     })
 }
+
+#[cfg(test)]
+mod tests {}

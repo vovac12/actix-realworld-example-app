@@ -473,3 +473,6 @@ fn select_tags_on_article(article_id: Uuid, conn: &PooledConn) -> Result<Vec<Str
 
     Ok(tags)
 }
+
+#[cfg(test)]
+mod tests {}

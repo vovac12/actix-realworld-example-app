@@ -1,68 +1,58 @@
-use std::marker::PhantomData;
-use std::mem;
-use std::{
-    any::{Any, TypeId},
-    collections::HashMap,
-};
-
+use crate::prelude::{Error, Result};
 use actix::prelude::*;
 use dev::MessageResponse;
 
-pub type MockerFn<T> = Box<dyn Fn(Box<dyn Any>, &mut SyncContext<Mocker<T>>) -> Box<dyn Any>>;
-
-/// This actor is able to wrap another actor and accept all the messages the
-/// wrapped actor can, passing it to a closure which can mock the response of
-/// the actor.
-pub struct Mocker<T: Sized + 'static> {
-    phantom: PhantomData<T>,
-    mock: HashMap<TypeId, MockerFn<T>>,
-    default: MockerFn<T>,
+#[derive(Debug, Clone)]
+pub enum Mocker {
+    Ok,
+    NotFound,
+    InternalError,
+    Unauthorized,
 }
 
-impl<T> Mocker<T> {
-    pub fn mock(mock: MockerFn<T>) -> Mocker<T> {
-        Mocker::<T> {
-            phantom: PhantomData,
-            mock: HashMap::new(),
-            default: mock,
-        }
-    }
-
-    pub fn with_handler<H: 'static>(mut self, mock: MockerFn<T>) -> Mocker<T> {
-        self.mock.insert(TypeId::of::<H>(), mock);
-        self
-    }
-
-    #[allow(dead_code)]
-    pub fn add_handler<H: 'static>(&mut self, mock: MockerFn<T>) {
-        self.mock.insert(TypeId::of::<H>(), mock);
+impl Default for Mocker {
+    fn default() -> Self {
+        Mocker::Ok
     }
 }
 
-impl<T: Sized + 'static> Actor for Mocker<T> {
+impl Actor for Mocker {
     type Context = SyncContext<Self>;
 }
 
-impl<M: 'static, T: Sized + 'static> Handler<M> for Mocker<T>
+pub trait OverwriteResult {
+    fn overwrite_result(&self, m: &Mocker) -> Option<Mocker> {
+        Some(m.clone())
+    }
+}
+
+pub trait DefaultValue {
+    fn default_value() -> Self;
+    fn none_value() -> Self;
+}
+
+impl<T: Default> From<Mocker> for Result<T> {
+    fn from(val: Mocker) -> Self {
+        match val {
+            Mocker::Ok => Ok(T::default()),
+            Mocker::NotFound => Err(Error::NotFound(json!("NotFound"))),
+            Mocker::Unauthorized => Err(Error::Unauthorized(json!("Unauthorized"))),
+            Mocker::InternalError => Err(Error::InternalServerError),
+        }
+    }
+}
+
+impl<M: 'static> Handler<M> for Mocker
 where
-    M: Message,
-    <M as Message>::Result: MessageResponse<Mocker<T>, M>,
+    M: Message + OverwriteResult,
+    <M as Message>::Result: MessageResponse<Mocker, M> + From<Mocker>,
 {
     type Result = M::Result;
-    fn handle(&mut self, msg: M, ctx: &mut Self::Context) -> M::Result {
-        let mut ret = if self.mock.contains_key(&msg.type_id()) {
-            (self.mock[&msg.type_id()])(Box::new(msg), ctx)
-        } else {
-            (self.default)(Box::new(msg), ctx)
-        };
-        let out = mem::replace(
-            ret.downcast_mut::<Option<M::Result>>()
-                .expect("wrong return type for message"),
-            None,
-        );
-        match out {
-            Some(a) => a,
-            _ => panic!(),
+    fn handle(&mut self, msg: M, _: &mut Self::Context) -> M::Result {
+        match msg.overwrite_result(self) {
+            None => self.clone(),
+            Some(x) => x,
         }
+        .into()
     }
 }

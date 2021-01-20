@@ -22,28 +22,28 @@ pub type PooledConn = PooledConnection<ConnectionManager<Conn>>;
 
 pub struct RealDbExecutor(pub PgPool);
 
+#[cfg(not(test))]
 impl RealDbExecutor {
     pub fn new(pool: PgPool) -> Self {
         RealDbExecutor(pool)
     }
 }
 
-#[cfg(test)]
-impl Into<Mocker<RealDbExecutor>> for RealDbExecutor {
-    fn into(self) -> Mocker<RealDbExecutor> {
-        Mocker::mock(Box::new(|x, _y| x))
-    }
+#[cfg(not(test))]
+pub fn new_executor(pool: PgPool) -> DbExecutor {
+    RealDbExecutor::new(pool)
 }
 
-pub fn new_executor(pool: PgPool) -> DbExecutor {
-    RealDbExecutor::new(pool).into()
+#[cfg(test)]
+pub fn new_executor(_: PgPool) -> DbExecutor {
+    DbExecutor::default()
 }
 
 #[cfg(not(test))]
 pub type DbExecutor = RealDbExecutor;
 
 #[cfg(test)]
-pub type DbExecutor = Mocker<RealDbExecutor>;
+pub type DbExecutor = Mocker;
 
 impl Actor for RealDbExecutor {
     type Context = SyncContext<Self>;

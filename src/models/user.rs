@@ -41,39 +41,38 @@ mod tests {
     impl Default for User {
         fn default() -> Self {
             User {
-                    username: "username".to_string(),
-                    password: "password".to_string(),
-                    email: "email".to_string(),
-                    id: Uuid::from_slice(&[1; 16]).unwrap(),
-                    bio: None,
-                    image: None,
-                    created_at: NaiveDateTime::from_timestamp(12, 12),
-                    updated_at: NaiveDateTime::from_timestamp(12, 12),
-                }
+                username: "username".to_string(),
+                password: "password".to_string(),
+                email: "email@e.mail".to_string(),
+                id: Uuid::from_slice(&[1; 16]).unwrap(),
+                bio: None,
+                image: None,
+                created_at: NaiveDateTime::from_timestamp(12, 12),
+                updated_at: NaiveDateTime::from_timestamp(12, 12),
+            }
         }
     }
     impl Default for NewUser {
         fn default() -> Self {
             NewUser {
-                    username: "username".to_string(),
-                    password: "password".to_string(),
-                    email: "email".to_string(),
-                    bio: None,
-                    image: None,
+                username: "username".to_string(),
+                password: "password".to_string(),
+                email: "email@e.mail".to_string(),
+                bio: None,
+                image: None,
             }
         }
     }
-    
+
     impl Default for UserChange {
         fn default() -> Self {
-        UserChange {
-                    username: Some("username".to_string()),
-                    password: Some("password".to_string()),
-                    email: Some("email".to_string()),
-                    bio: None,
-                    image: None,
-        }
-            
+            UserChange {
+                username: Some("username".to_string()),
+                password: Some("password".to_string()),
+                email: Some("email@e.mail".to_string()),
+                bio: None,
+                image: None,
+            }
         }
     }
 }

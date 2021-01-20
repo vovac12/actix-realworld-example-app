@@ -150,59 +150,62 @@ mod tests {
     use http::header::AUTHORIZATION;
 
     use super::*;
-    use crate::{app::{tests::{
-        authorized_mocker, get_body, new_handler, new_state_value, state_from_factory,
-        unauthorized_mocker, unauthorized_state,
-    }}};
-    
+    use crate::{
+        app::tests::{get_body, new_state},
+        db::tests::mocker::{Mocker, OverwriteResult},
+    };
+
+    impl OverwriteResult for GetComments {}
+    impl OverwriteResult for DeleteComment {}
+    impl OverwriteResult for AddCommentOuter {}
+
     impl Default for AddComment {
         fn default() -> Self {
             AddComment {
-                body: "Body".to_string()
+                body: "Body".to_string(),
             }
         }
     }
-    
+
     impl Default for AddCommentOuter {
         fn default() -> Self {
             AddCommentOuter {
                 comment: AddComment::default(),
                 auth: Auth::default(),
-                slug: "slug".to_string()
+                slug: "slug".to_string(),
             }
         }
     }
-    
+
     impl Default for CommentResponseInner {
         fn default() -> Self {
             CommentResponseInner {
-                        id: 12,
-                        created_at: CustomDateTime(NaiveDateTime::from_timestamp(12, 12)),
-                        updated_at: CustomDateTime(NaiveDateTime::from_timestamp(12, 2)),
-                        body: "Body".to_string(),
-                        author: ProfileResponseInner {
-                            username: "User".to_string(),
-                            bio: None,
-                            image: None,
-                            following: true,
-                        },
-                    }
-            
-        }
-    }
-    
-    impl Default for CommentResponse {
-        fn default() -> Self {
-            CommentResponse {
-                comment: CommentResponseInner::default()
+                id: 12,
+                created_at: CustomDateTime(NaiveDateTime::from_timestamp(12, 12)),
+                updated_at: CustomDateTime(NaiveDateTime::from_timestamp(12, 2)),
+                body: "Body".to_string(),
+                author: ProfileResponseInner {
+                    username: "User".to_string(),
+                    bio: None,
+                    image: None,
+                    following: true,
+                },
             }
         }
     }
-    
+
+    impl Default for CommentResponse {
+        fn default() -> Self {
+            CommentResponse {
+                comment: CommentResponseInner::default(),
+            }
+        }
+    }
+
     impl Default for CommentListResponse {
         fn default() -> Self {
-            CommentListResponse{
-                comments: vec![CommentResponseInner::default()]
+            CommentListResponse {
+                comments: vec![CommentResponseInner::default()],
             }
         }
     }
@@ -210,7 +213,7 @@ mod tests {
     #[test]
     fn test_delete_some() {
         let mut sys = actix::System::new("conduit");
-        let state = new_state_value(|| Ok(()));
+        let state = new_state(Mocker::Ok);
         let req =
             actix_web::test::TestRequest::with_header(AUTHORIZATION, "Token sj").to_http_request();
         let resp = sys
@@ -232,7 +235,7 @@ mod tests {
     #[test]
     fn test_delete_unauthorized() {
         let mut sys = actix::System::new("conduit");
-        let state = unauthorized_state();
+        let state = new_state(Mocker::Ok);
         let req = actix_web::test::TestRequest::default().to_http_request();
         let resp = sys
             .block_on(delete(
@@ -254,11 +257,7 @@ mod tests {
     #[test]
     fn test_delete_not_exists() {
         let mut sys = actix::System::new("conduit");
-        let state = state_from_factory(|| {
-            authorized_mocker().with_handler::<DeleteComment>(new_handler(|_, _| {
-                Box::new(Some(Err(Error::NotFound(json!(""))) as Result<()>))
-            }))
-        });
+        let state = new_state(Mocker::NotFound);
         let req = actix_web::test::TestRequest::default()
             .header(AUTHORIZATION, "Token d")
             .to_http_request();
@@ -273,22 +272,17 @@ mod tests {
                     HttpRequest::from(req),
                 ),
             ))
-            .unwrap();
+            .unwrap_err()
+            .error_response();
         let body = get_body(&resp);
-        assert_eq!(body, r#""""#);
+        assert_eq!(body, r#""NotFound""#);
         assert_eq!(resp.status(), 404);
     }
 
     #[test]
     fn test_list_not_found() {
         let mut sys = actix::System::new("conduit");
-        let state = state_from_factory(|| {
-            unauthorized_mocker().with_handler::<GetComments>(new_handler(|_, _| {
-                Box::new(Some(
-                    Err(Error::NotFound(json!(""))) as Result<CommentListResponse>
-                ))
-            }))
-        });
+        let state = new_state(Mocker::NotFound);
         let req =
             actix_web::test::TestRequest::with_header(AUTHORIZATION, "Token sj").to_http_request();
         let resp = sys
@@ -304,17 +298,13 @@ mod tests {
             .unwrap();
         let body = get_body(&resp);
         assert_eq!(resp.status(), 404);
-        assert_eq!(body, r#""""#);
+        assert_eq!(body, r#""NotFound""#);
     }
 
     #[test]
     fn test_list_some() {
         let mut sys = actix::System::new("conduit");
-        let state = state_from_factory(|| {
-            unauthorized_mocker().with_handler::<GetComments>(new_handler(|_, _| {
-                Box::new(Some(Ok(CommentListResponse::default()) as Result<CommentListResponse>))
-            }))
-        });
+        let state = new_state(Mocker::Ok);
         let req =
             actix_web::test::TestRequest::with_header(AUTHORIZATION, "Token sj").to_http_request();
         let resp = sys
@@ -339,11 +329,7 @@ mod tests {
     #[test]
     fn test_list_authorized() {
         let mut sys = actix::System::new("conduit");
-        let state = state_from_factory(|| {
-            authorized_mocker().with_handler::<GetComments>(new_handler(|_, _| {
-                Box::new(Some(Ok(CommentListResponse::default()) as Result<CommentListResponse>))
-            }))
-        });
+        let state = new_state(Mocker::Ok);
         let req =
             actix_web::test::TestRequest::with_header(AUTHORIZATION, "Token sj").to_http_request();
         let resp = sys
@@ -368,13 +354,8 @@ mod tests {
     #[test]
     fn test_add_unauthorized() {
         let mut sys = actix::System::new("conduit");
-        let state = state_from_factory(|| {
-            unauthorized_mocker().with_handler::<AddCommentOuter>(new_handler(|_, _| {
-                Box::new(Some(Ok(CommentResponse::default()) as Result<CommentResponse>))
-            }))
-        });
-        let req =
-            actix_web::test::TestRequest::with_header(AUTHORIZATION, "Token sj").to_http_request();
+        let state = new_state(Mocker::Ok);
+        let req = actix_web::test::TestRequest::default().to_http_request();
         let resp = sys
             .block_on(add(
                 Data::new(state),
@@ -382,27 +363,23 @@ mod tests {
                     Path::from(ArticlePath {
                         slug: "a".to_string(),
                     }),
-                    Json(In{comment: AddComment::default()}),
+                    Json(In {
+                        comment: AddComment::default(),
+                    }),
                     HttpRequest::from(req),
                 ),
             ))
-            .unwrap_err().error_response();
+            .unwrap_err()
+            .error_response();
         let body = get_body(&resp);
         assert_eq!(resp.status(), 401);
-        assert_eq!(
-            body,
-            r#""Not found""#
-        );
+        assert_eq!(body, r#"{"error":"No authorization was provided"}"#);
     }
 
     #[test]
     fn test_add_authorized() {
         let mut sys = actix::System::new("conduit");
-        let state = state_from_factory(|| {
-            authorized_mocker().with_handler::<AddCommentOuter>(new_handler(|_, _| {
-                Box::new(Some(Ok(CommentResponse::default()) as Result<CommentResponse>))
-            }))
-        });
+        let state = new_state(Mocker::Ok);
         let req =
             actix_web::test::TestRequest::with_header(AUTHORIZATION, "Token sj").to_http_request();
         let resp = sys
@@ -412,7 +389,9 @@ mod tests {
                     Path::from(ArticlePath {
                         slug: "a".to_string(),
                     }),
-                    Json(In{comment: AddComment::default()}),
+                    Json(In {
+                        comment: AddComment::default(),
+                    }),
                     HttpRequest::from(req),
                 ),
             ))

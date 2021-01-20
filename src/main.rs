@@ -12,9 +12,14 @@ extern crate serde_json;
 #[macro_use]
 extern crate validator_derive;
 
+#[cfg(test)]
+extern crate once_cell;
+
 mod app;
 mod db;
 mod error;
+#[cfg(test)]
+mod integration_tests;
 mod models;
 mod prelude;
 mod schema;

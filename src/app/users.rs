@@ -16,14 +16,14 @@ lazy_static! {
     static ref RE_USERNAME: Regex = Regex::new(r"^[_0-9a-zA-Z]+$").unwrap();
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct In<U> {
-    user: U,
+    pub user: U,
 }
 
 // Client Messages ↓
 
-#[derive(Debug, Validate, Deserialize)]
+#[derive(Debug, Validate, Deserialize, Serialize)]
 pub struct RegisterUser {
     #[validate(
         length(
@@ -47,7 +47,7 @@ pub struct RegisterUser {
     pub password: String,
 }
 
-#[derive(Debug, Validate, Deserialize)]
+#[derive(Debug, Validate, Deserialize, Serialize)]
 pub struct LoginUser {
     #[validate(email(message = "fails validation - is not a valid email address"))]
     pub email: String,
@@ -191,4 +191,67 @@ pub fn update(
             Ok(res) => Ok(HttpResponse::Ok().json(res)),
             Err(e) => Ok(e.error_response()),
         })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::db::tests::mocker::OverwriteResult;
+
+    impl OverwriteResult for UpdateUserOuter {}
+
+    impl OverwriteResult for LoginUser {}
+
+    impl OverwriteResult for RegisterUser {}
+
+    impl Default for LoginUser {
+        fn default() -> Self {
+            LoginUser {
+                email: "email@e.mail".to_string(),
+                password: "123qwe456".to_string(),
+            }
+        }
+    }
+
+    impl Default for RegisterUser {
+        fn default() -> Self {
+            RegisterUser {
+                username: "user".to_string(),
+                email: "email@e.mail".to_string(),
+                password: "123qwe456".to_string(),
+            }
+        }
+    }
+
+    impl Default for UserResponse {
+        fn default() -> Self {
+            UserResponse {
+                user: UserResponseInner::default(),
+            }
+        }
+    }
+
+    impl Default for UserResponseInner {
+        fn default() -> Self {
+            UserResponseInner {
+                email: "email@e.mail".to_string(),
+                token: "token".to_string(),
+                username: "username".to_string(),
+                bio: None,
+                image: None,
+            }
+        }
+    }
+
+    #[test]
+    fn test_get() {}
+
+    #[test]
+    fn test_login() {}
+
+    #[test]
+    fn test_invalid() {}
+
+    #[test]
+    fn test_register() {}
 }

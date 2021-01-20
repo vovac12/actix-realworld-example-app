@@ -30,3 +30,6 @@ impl Handler<GetTags> for RealDbExecutor {
         Ok(TagsResponse { tags: tag_list })
     }
 }
+
+#[cfg(test)]
+mod tests {}

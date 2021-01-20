@@ -32,35 +32,44 @@ pub fn get(state: Data<AppState>) -> impl Future<Item = HttpResponse, Error = Er
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::app::tests::{get_body, new_state_value};
+    use crate::db::tests::mocker::OverwriteResult;
+    use crate::{
+        app::tests::{get_body, new_state},
+        db::tests::mocker::Mocker,
+    };
+
+    impl OverwriteResult for GetTags {}
+
+    impl Default for TagsResponse {
+        fn default() -> Self {
+            TagsResponse {
+                tags: vec!["tag".to_string()],
+            }
+        }
+    }
 
     #[test]
     fn test_get_some() {
         let mut sys = actix::System::new("conduit");
-        let state = new_state_value(|| {
-            Ok(TagsResponse {
-                tags: vec!["Hello".to_string(), "world".to_string()],
-            })
-        });
+        let state = new_state(Mocker::Ok);
         let resp = sys.block_on(get(Data::new(state))).unwrap();
         let body = get_body(&resp);
-        assert_eq!(body, r#"{"tags":["Hello","world"]}"#);
+        assert_eq!(body, r#"{"tags":["tag"]}"#);
     }
 
     #[test]
     fn test_get_empty() {
         let mut sys = actix::System::new("conduit");
-        let state = new_state_value(|| Ok(TagsResponse { tags: vec![] }));
+        let state = new_state(Mocker::NotFound);
         let resp = sys.block_on(get(Data::new(state))).unwrap();
         let body = get_body(&resp);
-        assert_eq!(body, r#"{"tags":[]}"#);
+        assert_eq!(body, r#""NotFound""#);
     }
 
     #[test]
     fn test_get_error() {
         let mut sys = actix::System::new("conduit");
-        let state =
-            new_state_value(|| -> Result<TagsResponse, _> { Err(Error::InternalServerError) });
+        let state = new_state(Mocker::InternalError);
         let resp = sys.block_on(get(Data::new(state))).unwrap();
         let body = get_body(&resp);
         assert_eq!(body, r#""Internal Server Error""#);

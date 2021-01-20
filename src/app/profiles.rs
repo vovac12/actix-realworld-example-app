@@ -110,3 +110,41 @@ pub fn unfollow(
             Err(e) => Ok(e.error_response()),
         })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::db::tests::mocker::OverwriteResult;
+
+    impl OverwriteResult for GetProfile {}
+    impl OverwriteResult for FollowProfile {}
+    impl OverwriteResult for UnfollowProfile {}
+
+    impl Default for ProfileResponse {
+        fn default() -> Self {
+            ProfileResponse {
+                profile: ProfileResponseInner::default(),
+            }
+        }
+    }
+
+    impl Default for ProfileResponseInner {
+        fn default() -> Self {
+            ProfileResponseInner {
+                username: "user".to_string(),
+                bio: None,
+                image: None,
+                following: true,
+            }
+        }
+    }
+
+    #[test]
+    fn test_get() {}
+
+    #[test]
+    fn test_follow() {}
+
+    #[test]
+    fn test_unfollow() {}
+}

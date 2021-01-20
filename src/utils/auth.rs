@@ -55,15 +55,26 @@ fn preprocess_authz_token(token: Option<&HeaderValue>) -> Result<String> {
 
 #[cfg(test)]
 mod tests {
-    use crate::models::User;
+    use crate::db::tests::mocker::OverwriteResult;
+    use crate::{db::tests::mocker::Mocker, models::User};
 
-    use super::Auth;
+    use super::{Auth, GenerateAuth};
 
     impl Default for Auth {
         fn default() -> Self {
             Auth {
                 user: User::default(),
-                token: "token".to_string()
+                token: "token".to_string(),
+            }
+        }
+    }
+
+    impl OverwriteResult for GenerateAuth {
+        fn overwrite_result(&self, _: &Mocker) -> Option<Mocker> {
+            if self.token.len() == 0 {
+                Some(Mocker::Unauthorized)
+            } else {
+                None
             }
         }
     }

@@ -125,3 +125,6 @@ impl Handler<UnfollowProfile> for RealDbExecutor {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {}

@@ -25,6 +25,7 @@ fn index(_state: Data<AppState>, _req: HttpRequest) -> &'static str {
 
 pub fn start() {
     let frontend_origin = env::var("FRONTEND_ORIGIN").ok();
+    log::info!("Frontend origin {:?}", frontend_origin);
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let database_pool = new_pool(database_url).expect("Failed to create pool.");
@@ -43,8 +44,6 @@ pub fn start() {
                 .allowed_headers(vec![AUTHORIZATION, CONTENT_TYPE])
                 .max_age(3600),
             None => Cors::new()
-                .allowed_origin("*")
-                .send_wildcard()
                 .allowed_headers(vec![AUTHORIZATION, CONTENT_TYPE])
                 .max_age(3600),
         };
@@ -61,7 +60,7 @@ pub fn start() {
     println!("You can access the server at {}", bind_address);
 }
 
-fn routes(app: &mut web::ServiceConfig) {
+pub fn routes(app: &mut web::ServiceConfig) {
     app.service(web::resource("/").to(index)).service(
         web::scope("/api")
             // User routes ↓
@@ -113,89 +112,12 @@ fn routes(app: &mut web::ServiceConfig) {
 
 #[cfg(test)]
 pub mod tests {
-    use std::any::{Any, TypeId};
-
-    use actix::SyncContext;
     use actix_http::body::{Body, ResponseBody};
     use actix_web::HttpResponse;
-    use chrono::NaiveDateTime;
-    use uuid::Uuid;
 
     use super::*;
 
-    use crate::{
-        db::{
-            tests::mocker::{Mocker, MockerFn},
-            RealDbExecutor,
-        },
-        models::User,
-        prelude::{Error, Result},
-        utils::auth::{Auth, GenerateAuth},
-    };
-
-    pub fn new_state_value<F, T>(factory: F) -> AppState
-    where
-        F: Fn() -> Result<T, Error> + Clone + Sync + Send + 'static,
-        T: 'static,
-    {
-        new_state(move |x, _| {
-            let a = (*x).type_id();
-            if a == TypeId::of::<GenerateAuth>() {
-                Box::new(Some(Ok(Auth {
-                    user: User {
-                        username: "username".to_string(),
-                        password: "password".to_string(),
-                        email: "email".to_string(),
-                        id: Uuid::from_slice(&[1; 16]).unwrap(),
-                        bio: None,
-                        image: None,
-                        created_at: NaiveDateTime::from_timestamp(12, 12),
-                        updated_at: NaiveDateTime::from_timestamp(12, 12),
-                    },
-                    token: "token".to_string(),
-                }) as Result<Auth>))
-            } else {
-                Box::new(Some(factory()))
-            }
-        })
-    }
-
-    #[allow(dead_code)]
-    pub fn authorized_state() -> AppState {
-        state_from_factory(|| authorized_mocker())
-    }
-
-    pub fn new_handler<F>(mock: F) -> MockerFn<RealDbExecutor>
-    where
-        F: Fn(Box<dyn Any>, &mut SyncContext<Mocker<RealDbExecutor>>) -> Box<dyn Any>
-            + Clone
-            + Sync
-            + Send
-            + 'static,
-    {
-        Box::new(mock)
-    }
-
-    pub fn authorized_mocker() -> Mocker<RealDbExecutor> {
-        Mocker::mock(Box::new(|_, _| {
-            Box::new(Some(Ok(Auth {
-                user: User::default(),
-                token: "token".to_string(),
-            }) as Result<Auth>))
-        }))
-    }
-
-    pub fn unauthorized_mocker() -> Mocker<RealDbExecutor> {
-        Mocker::mock(Box::new(|_, _| {
-            Box::new(Some(
-                Err(Error::Unauthorized(json!("Not found"))) as Result<Auth>
-            ))
-        }))
-    }
-
-    pub fn unauthorized_state() -> AppState {
-        state_from_factory(|| unauthorized_mocker())
-    }
+    use crate::db::tests::mocker::Mocker;
 
     pub fn get_body(s: &HttpResponse<Body>) -> &str {
         let s = s.body();
@@ -208,26 +130,8 @@ pub mod tests {
             _ => "",
         }
     }
-
-    pub fn state_from_factory<F>(f: F) -> AppState
-    where
-        F: 'static + Clone + Fn() -> Mocker<RealDbExecutor> + Send + Sync,
-    {
-        let database_address = SyncArbiter::start(1, f);
-        AppState {
-            db: database_address.clone(),
-        }
-    }
-
-    pub fn new_state<F>(mock: F) -> AppState
-    where
-        F: Fn(Box<dyn Any>, &mut SyncContext<Mocker<RealDbExecutor>>) -> Box<dyn Any>
-            + Clone
-            + Sync
-            + Send
-            + 'static,
-    {
-        let factory = move || Mocker::mock(Box::new(mock.clone()));
+    pub fn new_state(m: Mocker) -> AppState {
+        let factory = move || m.clone();
         let database_address = SyncArbiter::start(1, factory);
 
         AppState {
